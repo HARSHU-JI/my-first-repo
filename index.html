@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f2f0e9" />
+  <title>Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Manrope", sans-serif;
+      background: #f2f0e9;
+      color: #202b28;
+      font-synthesis: none;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background-color: #f2f0e9;
+      background-image: radial-gradient(#c9c8bf 0.7px, transparent 0.7px);
+      background-size: 18px 18px;
+    }
+
+    .calculator {
+      width: min(100%, 390px);
+      padding: 22px;
+      border: 1px solid #dcdad1;
+      border-radius: 12px;
+      background: #fbfaf6;
+      box-shadow: 0 22px 60px rgb(42 48 43 / 12%), 0 3px 8px rgb(42 48 43 / 6%);
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 2px 18px;
+      color: #69736d;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      letter-spacing: 0.06em;
+    }
+
+    .status::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #62a887;
+      content: "";
+    }
+
+    .display {
+      min-height: 126px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: flex-end;
+      overflow: hidden;
+      padding: 16px 14px;
+      border: 1px solid #e6e4dc;
+      border-radius: 8px;
+      background: #f3f2ec;
+      text-align: right;
+    }
+
+    .expression,
+    .result {
+      width: 100%;
+      overflow: hidden;
+      font-family: "DM Mono", monospace;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .expression {
+      min-height: 25px;
+      color: #717a73;
+      font-size: 1rem;
+    }
+
+    .result {
+      min-height: 53px;
+      color: #202b28;
+      font-size: clamp(2.1rem, 11vw, 2.8rem);
+      line-height: 1.25;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    button {
+      min-width: 0;
+      height: 56px;
+      border: 1px solid #e6e4dc;
+      border-radius: 7px;
+      background: #fffefa;
+      color: #28332f;
+      cursor: pointer;
+      font: 700 1.05rem "Manrope", sans-serif;
+      transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      border-color: #a9b5aa;
+      background: #f1f3ed;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid #d77a5b;
+      outline-offset: 2px;
+    }
+
+    button.utility {
+      background: #e9ede6;
+      color: #52635a;
+    }
+
+    button.operator {
+      border-color: #dce5dd;
+      background: #e6eee8;
+      color: #28644f;
+      font-size: 1.2rem;
+    }
+
+    button.equals {
+      grid-column: span 2;
+      border-color: #cf694b;
+      background: #cf694b;
+      color: #fff;
+      font-size: 1.3rem;
+    }
+
+    button.equals:hover {
+      border-color: #b95a3e;
+      background: #b95a3e;
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 14px;
+      }
+
+      .calculator {
+        padding: 16px;
+      }
+
+      .buttons {
+        gap: 7px;
+      }
+
+      button {
+        height: 52px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator" aria-label="Calculator">
+    <div class="topline">
+      <span>Calculator</span>
+      <span class="status">Ready</span>
+    </div>
+    <div class="display" aria-live="polite" aria-atomic="true">
+      <div class="expression" id="expression"></div>
+      <div class="result" id="result">0</div>
+    </div>
+    <div class="buttons" aria-label="Calculator keys">
+      <button class="utility" type="button" data-action="clear" aria-label="Clear">AC</button>
+      <button class="utility" type="button" data-action="delete" aria-label="Delete last character">DEL</button>
+      <button class="utility" type="button" data-value="(" aria-label="Open parenthesis">(</button>
+      <button class="utility" type="button" data-value=")" aria-label="Close parenthesis">)</button>
+      <button class="operator" type="button" data-value="/" aria-label="Divide">÷</button>
+
+      <button type="button" data-value="7">7</button>
+      <button type="button" data-value="8">8</button>
+      <button type="button" data-value="9">9</button>
+      <button class="operator" type="button" data-value="*" aria-label="Multiply">×</button>
+      <button class="operator" type="button" data-value="%" aria-label="Remainder">%</button>
+
+      <button type="button" data-value="4">4</button>
+      <button type="button" data-value="5">5</button>
+      <button type="button" data-value="6">6</button>
+      <button class="operator" type="button" data-value="-">−</button>
+      <button class="operator" type="button" data-value="+">+</button>
+
+      <button type="button" data-value="1">1</button>
+      <button type="button" data-value="2">2</button>
+      <button type="button" data-value="3">3</button>
+      <button class="utility" type="button" data-action="sign" aria-label="Change sign">±</button>
+      <button class="equals" type="button" data-action="calculate" aria-label="Calculate">=</button>
+
+      <button type="button" data-value="0">0</button>
+      <button type="button" data-value=".">.</button>
+      <button class="utility" type="button" data-action="clear-entry" aria-label="Clear entry">CE</button>
+    </div>
+  </main>
+
+  <script>
+    const expressionDisplay = document.getElementById("expression");
+    const resultDisplay = document.getElementById("result");
+    const buttons = document.querySelector(".buttons");
+    let expression = "";
+    let justCalculated = false;
+
+    function evaluate(source) {
+      const tokens = [];
+      const tokenPattern = /\s*(?:(\d+(?:\.\d*)?|\.\d+)|([()+\-*/%]))/y;
+      let position = 0;
+
+      while (position < source.length) {
+        tokenPattern.lastIndex = position;
+        const match = tokenPattern.exec(source);
+        if (!match) throw new Error("Invalid expression");
+        tokens.push(match[1] ?? match[2]);
+        position = tokenPattern.lastIndex;
+      }
+
+      let cursor = 0;
+      function parseExpression() {
+        let value = parseTerm();
+        while (tokens[cursor] === "+" || tokens[cursor] === "-") {
+          const operator = tokens[cursor++];
+          const right = parseTerm();
+          value = operator === "+" ? value + right : value - right;
+        }
+        return value;
+      }
+
+      function parseTerm() {
+        let value = parseUnary();
+        while (["*", "/", "%"].includes(tokens[cursor])) {
+          const operator = tokens[cursor++];
+          const right = parseUnary();
+          if ((operator === "/" || operator === "%") && right === 0) {
+            throw new Error("Cannot divide by zero");
+          }
+          if (operator === "*") value *= right;
+          if (operator === "/") value /= right;
+          if (operator === "%") value %= right;
+        }
+        return value;
+      }
+
+      function parseUnary() {
+        if (tokens[cursor] === "+") {
+          cursor++;
+          return parseUnary();
+        }
+        if (tokens[cursor] === "-") {
+          cursor++;
+          return -parseUnary();
+        }
+        return parsePrimary();
+      }
+
+      function parsePrimary() {
+        const token = tokens[cursor++];
+        if (token === "(") {
+          const value = parseExpression();
+          if (tokens[cursor++] !== ")") throw new Error("Unclosed parenthesis");
+          return value;
+        }
+        if (token === undefined || token === ")") throw new Error("Expected a number");
+        const value = Number(token);
+        if (!Number.isFinite(value)) throw new Error("Invalid number");
+        return value;
+      }
+
+      const value = parseExpression();
+      if (cursor !== tokens.length || !Number.isFinite(value)) {
+        throw new Error("Invalid expression");
+      }
+      return Number(value.toPrecision(12));
+    }
+
+    function render() {
+      expressionDisplay.textContent = expression.replaceAll("*", "×").replaceAll("/", "÷");
+      if (!expression) {
+        resultDisplay.textContent = "0";
+        return;
+      }
+      try {
+        resultDisplay.textContent = String(evaluate(expression));
+      } catch {
+        resultDisplay.textContent = "";
+      }
+    }
+
+    function appendValue(value) {
+      if (justCalculated && /[0-9.(]/.test(value)) expression = "";
+      justCalculated = false;
+      if (value === ".") {
+        const currentNumber = expression.split(/[+\-*/%()]/).at(-1);
+        if (currentNumber.includes(".")) return;
+        if (!currentNumber) expression += "0";
+      }
+      expression += value;
+      render();
+    }
+
+    function calculate() {
+      try {
+        expression = String(evaluate(expression));
+        justCalculated = true;
+        render();
+      } catch {
+        expressionDisplay.textContent = expression.replaceAll("*", "×").replaceAll("/", "÷");
+        resultDisplay.textContent = "Error";
+        justCalculated = false;
+      }
+    }
+
+    function handleAction(action) {
+      if (action === "clear") {
+        expression = "";
+        justCalculated = false;
+        render();
+      } else if (action === "delete") {
+        expression = expression.slice(0, -1);
+        justCalculated = false;
+        render();
+      } else if (action === "clear-entry") {
+        expression = expression.replace(/(?:\d+\.?\d*|\.\d+)$/, "");
+        justCalculated = false;
+        render();
+      } else if (action === "sign") {
+        expression = expression ? `-(${expression})` : "-";
+        justCalculated = false;
+        render();
+      } else if (action === "calculate") {
+        calculate();
+      }
+    }
+
+    buttons.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      if (button.dataset.value !== undefined) appendValue(button.dataset.value);
+      else handleAction(button.dataset.action);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (/^[0-9.+\-*/%()]$/.test(event.key)) {
+        event.preventDefault();
+        appendValue(event.key);
+      } else if (event.key === "Enter" || event.key === "=") {
+        event.preventDefault();
+        calculate();
+      } else if (event.key === "Backspace") {
+        handleAction("delete");
+      } else if (event.key === "Escape") {
+        handleAction("clear");
+      }
+    });
+  </script>
+</body>
+</html>
